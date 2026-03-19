@@ -1,5 +1,6 @@
 const SHEETS = {
-  API_URL: 'https://script.google.com/macros/s/AKfycby6rLvf98aQDmKtfN5NpHscYb0mGkRgQbip0YKJ0czKGlo8j6pqbFieP4NUbI2IG0U/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycby9Ks12d_MAhrPBTcACX_iQ2f7aTSA-QJzZ5k6Ng8eSo9D0yWwpE0kWuU4S3mIZuMM/exec',
+
 
   async call(data) {
     const params = new URLSearchParams(data);
