@@ -40,7 +40,7 @@ const SheetsDB = {
     },
 
     async getStock() {
-        const rows = await this.read(this.SHEETS.STOCK);
+        const rows = await this.read(this.SheetsDB.STOCK);
         return this.toObjects(rows);
     }
 };
