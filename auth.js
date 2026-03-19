@@ -10,11 +10,12 @@ const Auth = {
 
   async login(nom, prenom, password) {
     try {
-      const users = await Sheets.getUtilisateurs();
+      const result = await SHEETS.getUtilisateurs();
+      const users = result.data;
       const user = users.find(u =>
-        u.nom.toLowerCase() === nom.toLowerCase() &&
-        u.prenom.toLowerCase() === prenom.toLowerCase() &&
-        u.password === password
+        u.NOM.toLowerCase() === nom.toLowerCase() &&
+        u.PRENOM.toLowerCase() === prenom.toLowerCase() &&
+        u.PASSWORD === password
       );
       if (user) {
         this.currentUser = user;
@@ -39,6 +40,6 @@ const Auth = {
 
   getFullName() {
     if (!this.currentUser) return '';
-    return `${this.currentUser.prenom} ${this.currentUser.nom}`;
+    return `${this.currentUser.PRENOM} ${this.currentUser.NOM}`;
   }
 };
