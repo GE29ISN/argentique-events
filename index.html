@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Argentique Events - Gestion</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <img src="logo.png" alt="L'Argentique Events" onerror="this.style.display='none'">
+        <h2>L'Argentique<br><span>Events</span></h2>
+    </div>
+    <nav>
+        <a href="#" class="nav-item active" data-page="stock">
+            <i class="fas fa-boxes"></i> Stock
+        </a>
+        <a href="#" class="nav-item" data-page="facturation">
+            <i class="fas fa-file-invoice"></i> Facturation
+        </a>
+        <a href="#" class="nav-item" data-page="disponibilite">
+            <i class="fas fa-calendar-alt"></i> Disponibilité
+        </a>
+        <a href="#" class="nav-item" data-page="logs">
+            <i class="fas fa-history"></i> Logs
+        </a>
+        <a href="#" class="nav-item" data-page="parametres">
+            <i class="fas fa-cog"></i> Paramètres
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <span id="sync-status"><i class="fas fa-circle"></i> Connecté</span>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <!-- HEADER -->
+    <div class="top-header">
+        <h1 id="page-title">Stock</h1>
+        <div class="header-actions" id="header-actions"></div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container"></div>
+
+    <!-- ==================== PAGE STOCK ==================== -->
+    <div id="page-stock" class="page active">
+
+        <!-- Stats rapides -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <i class="fas fa-boxes"></i>
+                <div><span id="stat-total-refs">0</span><small>Références</small></div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-cubes"></i>
+                <div><span id="stat-total-items">0</span><small>Articles total</small></div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-tags"></i>
+                <div><span id="stat-categories">0</span><small>Catégories</small></div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-euro-sign"></i>
+                <div><span id="stat-valeur">0€</span><small>Valeur stock</small></div>
+            </div>
+        </div>
+
+        <!-- Filtres stock -->
+        <div class="filters-bar">
+            <input type="text" id="search-stock" placeholder="🔍 Rechercher une référence, marque..." class="search-input">
+            <select id="filter-categorie" class="filter-select">
+                <option value="">Toutes catégories</option>
+            </select>
+            <button class="btn btn-primary" onclick="openModal('modal-add-stock')">
+                <i class="fas fa-plus"></i> Ajouter matériel
+            </button>
+            <button class="btn btn-danger" onclick="openModal('modal-remove-stock')">
+                <i class="fas fa-minus"></i> Retirer matériel
+            </button>
+        </div>
+
+        <!-- Table stock -->
+        <div class="table-container">
+            <table id="table-stock">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Désignation</th>
+                        <th>Marque</th>
+                        <th>Catégorie</th>
+                        <th>Qté totale</th>
+                        <th>Prix achat</th>
+                        <th>Prix location/j</th>
+                        <th>État</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-stock">
+                    <tr><td colspan="9" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE FACTURATION ==================== -->
+    <div id="page-facturation" class="page">
+
+        <div class="facturation-layout">
+            <!-- Liste devis/factures -->
+            <div class="devis-list-panel">
+                <div class="panel-header">
+                    <h3>Devis & Factures</h3>
+                    <button class="btn btn-primary btn-sm" onclick="nouveauDevis()">
+                        <i class="fas fa-plus"></i> Nouveau
+                    </button>
+                </div>
+                <input type="text" placeholder="🔍 Rechercher..." id="search-devis" class="search-input">
+                <div class="devis-filters">
+                    <button class="filter-btn active" data-filter="tous">Tous</button>
+                    <button class="filter-btn" data-filter="devis">Devis</button>
+                    <button class="filter-btn" data-filter="facture">Factures</button>
+                </div>
+                <div id="devis-list"></div>
+            </div>
+
+            <!-- Éditeur devis -->
+            <div class="devis-editor-panel" id="devis-editor">
+                <div class="empty-state">
+                    <i class="fas fa-file-invoice"></i>
+                    <p>Sélectionnez un devis ou créez-en un nouveau</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE DISPONIBILITE ==================== -->
+    <div id="page-disponibilite" class="page">
+        <div class="dispo-controls">
+            <div class="dispo-search">
+                <input type="text" id="dispo-ref" placeholder="🔍 Référence ou désignation..." class="search-input">
+                <div id="dispo-suggestions" class="suggestions-dropdown"></div>
+            </div>
+            <input type="date" id="dispo-date-debut" class="filter-select">
+            <input type="date" id="dispo-date-fin" class="filter-select">
+            <button class="btn btn-primary" onclick="checkDisponibilite()">
+                <i class="fas fa-search"></i> Vérifier
+            </button>
+        </div>
+
+        <div id="dispo-result"></div>
+    </div>
+
+    <!-- ==================== PAGE LOGS ==================== -->
+    <div id="page-logs" class="page">
+        <div class="filters-bar">
+            <input type="text" id="search-logs" placeholder="🔍 Rechercher dans les logs..." class="search-input">
+            <select id="filter-logs-type" class="filter-select">
+                <option value="">Tous les types</option>
+                <option value="STOCK_ADD">Ajout stock</option>
+                <option value="STOCK_REMOVE">Retrait stock</option>
+                <option value="DEVIS_CREATE">Création devis</option>
+                <option value="DEVIS_UPDATE">Modification devis</option>
+                <option value="FACTURE">Facturation</option>
+            </select>
+            <input type="date" id="filter-logs-date" class="filter-select">
+        </div>
+        <div class="table-container">
+            <table id="table-logs">
+                <thead>
+                    <tr>
+                        <th>Date & Heure</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                        <th>Détails</th>
+                        <th>Utilisateur</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-logs">
+                    <tr><td colspan="5" class="loading"><i class="fas fa-spinner fa-spin"></i> Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE PARAMETRES ==================== -->
+    <div id="page-parametres" class="page">
+        <div class="params-grid">
+            <div class="param-card">
+                <h3><i class="fas fa-tag"></i> Catégories</h3>
+                <div id="categories-list"></div>
+                <div class="add-categorie-form">
+                    <input type="text" id="new-cat-name" placeholder="Nom de la catégorie">
+                    <input type="text" id="new-cat-parent" placeholder="Famille (SON, LUMIERE...)">
+                    <button class="btn btn-primary btn-sm" onclick="addCategorie()">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </div>
+            </div>
+            <div class="param-card">
+                <h3><i class="fas fa-user"></i> Utilisateur actuel</h3>
+                <input type="text" id="username-input" placeholder="Votre prénom" class="search-input">
+                <button class="btn btn-primary btn-sm" onclick="saveUsername()">
+                    <i class="fas fa-save"></i> Sauvegarder
+                </button>
+            </div>
+            <div class="param-card">
+                <h3><i class="fas fa-link"></i> Configuration Google Sheets</h3>
+                <p class="param-info">ID du Google Sheets :</p>
+                <input type="text" id="sheets-id-input" placeholder="ID du spreadsheet" class="search-input">
+                <p class="param-info">Clé API Google :</p>
+                <input type="text" id="sheets-api-input" placeholder="Clé API" class="search-input">
+                <button class="btn btn-primary btn-sm" onclick="saveConfig()">
+                    <i class="fas fa-save"></i> Sauvegarder
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end main-content -->
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Modal Ajouter Stock -->
+<div id="modal-add-stock" class="modal-overlay">
+    <div class="modal large">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Ajouter du matériel</h3>
+            <button class="modal-close" onclick="closeModal('modal-add-stock')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Référence *</label>
+                    <input type="text" id="add-ref" placeholder="EX: SON-001" required>
+                </div>
+                <div class="form-group">
+                    <label>Désignation *</label>
+                    <input type="text" id="add-designation" placeholder="Nom du matériel" required>
+                </div>
+                <div class="form-group">
+                    <label>Marque</label>
+                    <input type="text" id="add-marque" placeholder="Marque">
+                </div>
+                <div class="form-group">
+                    <label>Modèle</label>
+                    <input type="text" id="add-modele" placeholder="Modèle">
+                </div>
+                <div class="form-group">
+                    <label>Famille</label>
+                    <select id="add-famille">
+                        <option value="SON">SON</option>
+                        <option value="LUMIERE">LUMIERE</option>
+                        <option value="VIDEO">VIDEO</option>
+                        <option value="STRUCTURE">STRUCTURE</option>
+                        <option value="ELECTRIQUE">ELECTRIQUE</option>
+                        <option value="CONSOMMABLE">CONSOMMABLE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Catégorie *</label>
+                    <select id="add-categorie"></select>
+                </div>
+                <div class="form-group">
+                    <label>Quantité *</label>
+                    <input type="number" id="add-quantite" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>Prix d'achat (€)</label>
+                    <input type="number" id="add-prix-achat" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Prix location/jour (€)</label>
+                    <input type="number" id="add-prix-location" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Prix vente (€)</label>
+                    <input type="number" id="add-prix-vente" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>État</label>
+                    <select id="add-etat">
+                        <option value="Bon état">Bon état</option>
+                        <option value="Usagé">Usagé</option>
+                        <option value="À réparer">À réparer</option>
+                        <option value="Hors service">Hors service</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Numéro de série</label>
+                    <input type="text" id="add-serial" placeholder="N° de série">
+                </div>
+                <div class="form-group">
+                    <label>Date d'achat</label>
+                    <input type="date" id="add-date-achat">
+                </div>
+                <div class="form-group">
+                    <label>Fournisseur</label>
+                    <input type="text" id="add-fournisseur" placeholder="Nom du fournisseur">
+                </div>
+                <div class="form-group full-width">
+                    <label><i class="fas fa-plug"></i> Notes techniques (connectique, câblage...)</label>
+                    <textarea id="add-notes" rows="3" placeholder="Ex: Connecteurs XLR 3 broches, alimentation IEC, compatible DMX 512..."></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label>Consommable ?</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="add-consommable">
+                        <span class="toggle-slider"></span>
+                        <span>Ce matériel est consommable</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('modal-add-stock')">Annuler</button>
+            <button class="btn btn-primary" onclick="addMateriel()">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Retirer Stock -->
+<div id="modal-remove-stock" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-minus-circle"></i> Retirer du matériel</h3>
+            <button class="modal-close" onclick="closeModal('modal-remove-stock')">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Référence *</label>
+                <input type="text" id="remove-ref" placeholder="Entrez la référence" oninput="searchRefForRemove(this.value)">
+                <div id="remove-ref-info" class="ref-info"></div>
+            </div>
+            <div class="form-group">
+                <label>Quantité à retirer *</label>
+                <input type="number" id="remove-quantite" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>Raison *</label>
+                <select id="remove-raison">
+                    <option value="poubelle">🗑️ Mis à la poubelle (fin de vie)</option>
+                    <option value="donne">🎁 Donné</option>
+                    <option value="vendu">💰 Vendu</option>
+                    <option value="perdu">❓ Perdu</option>
+                    <option value="vole">🚨 Volé</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Commentaire</label>
+                <textarea id="remove-commentaire" rows="2" placeholder="Informations complémentaires..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('modal-remove-stock')">Annuler</button>
+            <button class="btn btn-danger" onclick="removeMateriel()">
+                <i class="fas fa-trash"></i> Retirer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Détail Matériel -->
+<div id="modal-detail-stock" class="modal-overlay">
+    <div class="modal large">
+        <div class="modal-header">
+            <h3><i class="fas fa-info-circle"></i> Détail matériel</h3>
+            <button class="modal-close" onclick="closeModal('modal-detail-stock')">✕</button>
+        </div>
+        <div class="modal-body" id="modal-detail-content"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('modal-detail-stock')">Fermer</button>
+            <button class="btn btn-primary" id="btn-edit-materiel" onclick="">
+                <i class="fas fa-edit"></i> Modifier
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="sheets.js"></script>
+<script src="app.js"></script>
+<script src="pdf.js"></script>
+</body>
+</html>
