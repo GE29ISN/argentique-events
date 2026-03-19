@@ -8,18 +8,17 @@ const Auth = {
     }
   },
 
-  async login(nom, password) {
+  async login(username, password) {
     try {
-      const result = await SHEETS.getUtilisateurs();
-      const users = result.data;
-      const user = users.find(u =>
-        u.NOM.toLowerCase() === nom.toLowerCase() &&
-        u.PASSWORD === password
-      );
-      if (user) {
-        this.currentUser = user;
-        sessionStorage.setItem('currentUser', JSON.stringify(user));
-        return { success: true, user };
+      const result = await SHEETS.call({
+        action: 'login',
+        username: username,
+        password: password
+      });
+      if (result.success) {
+        this.currentUser = result.user;
+        sessionStorage.setItem('currentUser', JSON.stringify(result.user));
+        return { success: true, user: result.user };
       } else {
         return { success: false, message: 'Identifiants incorrects' };
       }
