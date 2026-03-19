@@ -91,5 +91,98 @@
   <script src="sheets.js"></script>
   <script src="app.js"></script>
   <script src="pdf.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      Auth.init();
+
+      // Si déjà connecté (session active)
+      if (Auth.isLoggedIn()) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('user-display').textContent = Auth.getFullName();
+        if (typeof APP !== 'undefined' && APP.init) {
+          APP.init();
+        }
+      }
+
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
+
+        const result = await Auth.login(username, password);
+
+        if (result.success) {
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('app').classList.remove('hidden');
+          document.getElementById('user-display').textContent = Auth.getFullName();
+          if (typeof APP !== 'undefined' && APP.init) {
+            APP.init();
+          }
+        } else {
+          errorEl.textContent = result.message;
+          errorEl.classList.remove('hidden');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
+        }
+      });
+    });
+
+    function logout() {
+      Auth.logout();
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+    }
+
+    function navigate(page) {
+      // Masquer toutes les pages
+      document.querySelectorAll('.page').forEach(p => {
+        p.classList.add('hidden');
+        p.classList.remove('active');
+      });
+
+      // Retirer active sur tous les nav-items
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active');
+      });
+
+      // Afficher la page cible
+      const pageEl = document.getElementById('page-' + page);
+      if (pageEl) {
+        pageEl.classList.remove('hidden');
+        pageEl.classList.add('active');
+      }
+
+      // Activer le bon nav-item
+      const navEl = document.getElementById('nav-' + page);
+      if (navEl) {
+        navEl.classList.add('active');
+      }
+
+      // Appeler le rendu de la page si APP le gère
+      if (typeof APP !== 'undefined' && APP.renderPage) {
+        APP.renderPage(page);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('modal-overlay').classList.add('hidden');
+    }
+  </script>
+
 </body>
 </html>
