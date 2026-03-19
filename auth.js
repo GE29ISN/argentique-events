@@ -8,13 +8,12 @@ const Auth = {
     }
   },
 
-  async login(nom, prenom, password) {
+  async login(nom, password) {
     try {
       const result = await SHEETS.getUtilisateurs();
       const users = result.data;
       const user = users.find(u =>
         u.NOM.toLowerCase() === nom.toLowerCase() &&
-        u.PRENOM.toLowerCase() === prenom.toLowerCase() &&
         u.PASSWORD === password
       );
       if (user) {
