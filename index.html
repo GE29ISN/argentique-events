@@ -1,49 +1,95 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>L'Argentique Events</title>
-
-<link rel="stylesheet" href="style.css">
-
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L'Argentique Events - Gestion</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
-
 <body>
 
-<div class="sidebar">
-    <h2>L'Argentique</h2>
-    <button onclick="showPage('stock')">Stock</button>
-</div>
+  <!-- LOGIN -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-box">
+      <img src="logo.png" alt="Logo" class="login-logo">
+      <h1>L'Argentique Events</h1>
+      <p class="login-subtitle">Gestion de stock & devis</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label><i class="fas fa-user"></i> Identifiant</label>
+          <input type="text" id="login-username" placeholder="votre identifiant" required>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-lock"></i> Mot de passe</label>
+          <input type="password" id="login-password" placeholder="••••••••" required>
+        </div>
+        <div id="login-error" class="login-error hidden"></div>
+        <button type="submit" class="btn btn-primary btn-full">
+          <i class="fas fa-sign-in-alt"></i> Se connecter
+        </button>
+      </form>
+    </div>
+  </div>
 
-<div class="main-content">
+  <!-- APP -->
+  <div id="app" class="hidden">
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="logo.png" alt="Logo" class="sidebar-logo">
+        <span class="sidebar-title">L'Argentique</span>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="#" onclick="navigate('stock')" id="nav-stock" class="nav-item active">
+          <i class="fas fa-boxes"></i><span>Stock</span>
+        </a></li>
+        <li><a href="#" onclick="navigate('devis')" id="nav-devis" class="nav-item">
+          <i class="fas fa-file-invoice"></i><span>Devis</span>
+        </a></li>
+        <li><a href="#" onclick="navigate('calendrier')" id="nav-calendrier" class="nav-item">
+          <i class="fas fa-calendar-alt"></i><span>Calendrier</span>
+        </a></li>
+        <li><a href="#" onclick="navigate('logs')" id="nav-logs" class="nav-item">
+          <i class="fas fa-history"></i><span>Logs</span>
+        </a></li>
+        <li><a href="#" onclick="navigate('parametres')" id="nav-parametres" class="nav-item">
+          <i class="fas fa-cog"></i><span>Paramètres</span>
+        </a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-display"></span>
+        </div>
+        <button onclick="logout()" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </nav>
 
-    <h1>Stock</h1>
+    <!-- MAIN -->
+    <main class="main-content">
+      <div id="page-stock" class="page active"></div>
+      <div id="page-devis" class="page hidden"></div>
+      <div id="page-calendrier" class="page hidden"></div>
+      <div id="page-logs" class="page hidden"></div>
+      <div id="page-parametres" class="page hidden"></div>
+    </main>
+  </div>
 
-    <input type="text" id="search-stock" placeholder="Rechercher..." oninput="searchStock()">
+  <!-- MODALS -->
+  <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal()"></div>
+  <div id="modal" class="modal hidden"></div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Réf</th>
-                <th>Nom</th>
-                <th>Catégorie</th>
-                <th>Qté</th>
-            </tr>
-        </thead>
-        <tbody id="tbody-stock">
-            <tr><td colspan="4">Chargement...</td></tr>
-        </tbody>
-    </table>
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
 
-</div>
-
-<script src="sheets.js"></script>
-<script src="app.js"></script>
-
+  <script src="auth.js"></script>
+  <script src="sheets.js"></script>
+  <script src="app.js"></script>
+  <script src="pdf.js"></script>
 </body>
 </html>
