@@ -1,5 +1,5 @@
 const SHEETS = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbzw3AcED-6klQtMQqEytFgBo9edPZehvYO_9AXygqh_X887DZqvTu4Nxrw7gG5J60c/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbx8lDy4-9Sk2v9VjW3gzG2OI1cpqJVl4JPg-u67vUEKh5f5FRaqUEiSbWSgrgh8Lqg/exec',
 
 
   async call(data) {
