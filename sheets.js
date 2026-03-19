@@ -142,5 +142,3 @@ const SheetsDB = {
         return await this.append(this.SHEETS.LOGS, values);
     }
 };
-// À la toute fin de sheets.js
-const Sheets = SheetsDB;
