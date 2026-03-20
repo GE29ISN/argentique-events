@@ -39,7 +39,7 @@ const APP = {
 
   async loadAllData() {
     try {
-      const [stock, devis, lignesDevis, categories, logs, parametres] = await Promise.all([
+      const results = await Promise.allSettled([
         SHEETS.getStock(),
         SHEETS.getDevis(),
         SHEETS.getLignesDevis(),
@@ -48,12 +48,12 @@ const APP = {
         SHEETS.getParametres()
       ]);
 
-      this.stock       = stock?.data       || [];
-      this.devis       = devis?.data       || [];
-      this.lignesDevis = lignesDevis?.data || [];
-      this.categories  = categories?.data  || [];
-      this.logs        = logs?.data        || [];
-      this.parametres  = parametres?.data  || {};
+      this.stock       = results[0].value?.data || [];
+      this.devis       = results[1].value?.data || [];
+      this.lignesDevis = results[2].value?.data || [];
+      this.categories  = results[3].value?.data || [];
+      this.logs        = results[4].value?.data || [];
+      this.parametres  = results[5].value?.data || {};
 
     } catch(e) {
       console.error('Erreur chargement données:', e);
@@ -101,7 +101,14 @@ const APP = {
     if (!container) return;
 
     if (this.stock.length === 0) {
-      container.innerHTML = '<p class="empty-msg">Aucun article en stock.</p>';
+      container.innerHTML = `
+        <div class="page-header">
+          <h2><i class="fas fa-boxes"></i> Stock</h2>
+          <button class="btn btn-primary" onclick="APP.openAddStock()">
+            <i class="fas fa-plus"></i> Ajouter
+          </button>
+        </div>
+        <p class="empty-msg">Aucun article en stock.</p>`;
       return;
     }
 
@@ -175,10 +182,10 @@ const APP = {
 
   async saveNewStock() {
     const data = {
-      reference:    document.getElementById('add-ref')?.value.trim(),
-      designation:  document.getElementById('add-designation')?.value.trim(),
-      categorie:    document.getElementById('add-categorie')?.value,
-      quantite:     document.getElementById('add-quantite')?.value,
+      reference:     document.getElementById('add-ref')?.value.trim(),
+      designation:   document.getElementById('add-designation')?.value.trim(),
+      categorie:     document.getElementById('add-categorie')?.value,
+      quantite:      document.getElementById('add-quantite')?.value,
       prix_unitaire: document.getElementById('add-prix')?.value
     };
     if (!data.reference || !data.designation) {
@@ -360,11 +367,11 @@ const APP = {
 
   async saveNewDevis() {
     const data = {
-      numero:          document.getElementById('new-numero')?.value.trim(),
-      client:          document.getElementById('new-client')?.value.trim(),
-      date_evenement:  document.getElementById('new-date-event')?.value,
-      lieu:            document.getElementById('new-lieu')?.value.trim(),
-      statut:          document.getElementById('new-statut')?.value,
+      numero:         document.getElementById('new-numero')?.value.trim(),
+      client:         document.getElementById('new-client')?.value.trim(),
+      date_evenement: document.getElementById('new-date-event')?.value,
+      lieu:           document.getElementById('new-lieu')?.value.trim(),
+      statut:         document.getElementById('new-statut')?.value,
     };
     if (!data.client) { alert('Client obligatoire.'); return; }
     const res = await SHEETS.addDevis(data);
@@ -393,7 +400,9 @@ const APP = {
       <div class="modal-body">
         <p><strong>Client :</strong> ${d.CLIENT || ''}</p>
         <p><strong>Événement :</strong> ${d.DATE_EVENEMENT || ''} — ${d.LIEU || ''}</p>
-        <p><strong>Statut :</strong> <span class="badge badge-${(d.STATUT||'').toLowerCase()}">${d.STATUT || ''}</span></p>
+        <p><strong>Statut :</strong>
+          <span class="badge badge-${(d.STATUT||'').toLowerCase()}">${d.STATUT || ''}</span>
+        </p>
         <hr>
         <h4>Lignes</h4>
         ${this.currentDevisLignes.length === 0
@@ -412,7 +421,9 @@ const APP = {
               </tbody>
             </table>`
         }
-        <p class="total-line"><strong>Total TTC : ${parseFloat(d.TOTAL_TTC || 0).toFixed(2)} €</strong></p>
+        <p class="total-line">
+          <strong>Total TTC : ${parseFloat(d.TOTAL_TTC || 0).toFixed(2)} €</strong>
+        </p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal()">Fermer</button>
@@ -446,7 +457,7 @@ const APP = {
     const year  = this.calendarDate.getFullYear();
     const month = this.calendarDate.getMonth();
 
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstDay    = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin',
@@ -476,14 +487,14 @@ const APP = {
       html += '<div class="cal-empty"></div>';
     }
 
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const events  = this.devis.filter(dv => (dv.DATE_EVENEMENT || '').startsWith(dateStr));
-      const hasEvent = events.length > 0;
       html += `
-        <div class="cal-day ${hasEvent ? 'has-event' : ''}" onclick="APP.showDayEvents('${dateStr}')">
-          <span class="cal-day-num">${d}</span>
-          ${hasEvent ? `<span class="event-dot">${events.length}</span>` : ''}
+        <div class="cal-day ${events.length > 0 ? 'has-event' : ''}"
+             onclick="APP.showDayEvents('${dateStr}')">
+          <span class="cal-day-num">${day}</span>
+          ${events.length > 0 ? `<span class="event-dot">${events.length}</span>` : ''}
         </div>
       `;
     }
@@ -505,7 +516,7 @@ const APP = {
   showDayEvents(dateStr) {
     const events = this.devis.filter(d => (d.DATE_EVENEMENT || '').startsWith(dateStr));
     if (events.length === 0) return;
-    const modal = document.getElementById('modal');
+    const modal   = document.getElementById('modal');
     const overlay = document.getElementById('modal-overlay');
     modal.innerHTML = `
       <div class="modal-header">
