@@ -298,7 +298,7 @@ const APP = {
     const res = await SHEETS.getParametres();
     if (res.success) this.parametres = res.data;
 
-    const container = document.getElementById('parametres-content');
+    const container = document.getElementById('page-parametres');
     if (!container) return;
 
     container.innerHTML = `
